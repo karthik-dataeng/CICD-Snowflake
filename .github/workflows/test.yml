@@ -1,10 +1,62 @@
 name: first_workflow
 on: workflow_dispatch
+
 jobs:
-    first_job:
-            runs-on: ubuntu-latest
-            steps:
-                -   name: print greeting
-                    run: echo :"hello-world"
-                -   name: end
-                    run: echo "done bye bye"
+  snowflake-connection:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install snowflake-connector-python
+
+    - name: Test Snowflake Connection
+      env:
+        SF_USER_NAME: ${{ secrets.SF_USER_NAME }}
+        SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+        SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+        SF_SCHEMA_NAME: ${{ secrets.SF_SCHEMA_NAME }}
+        SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
+      run: |
+        python - <<EOF
+        import os
+        import snowflake.connector
+
+        try:
+            # Retrieve environment variables
+            user = os.getenv("SF_USER_NAME")
+            warehouse = os.getenv("SF_WAREHOUSE")
+            account = os.getenv("SF_ACCOUNT")
+            schema = os.getenv("SF_SCHEMA_NAME")
+            password = os.getenv("SF_PASSWORD")
+
+            # Connect to Snowflake
+            conn = snowflake.connector.connect(
+                user=user,
+                password=password,
+                account=account,
+                warehouse=warehouse,
+                schema=schema
+            )
+
+            # Test the connection
+            cursor = conn.cursor()
+            cursor.execute("SELECT CURRENT_VERSION()")
+            version = cursor.fetchone()
+            print(f"Connected to Snowflake. Version: {version[0]}")
+
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Failed to connect to Snowflake: {e}")
+            raise e
+        EOF
