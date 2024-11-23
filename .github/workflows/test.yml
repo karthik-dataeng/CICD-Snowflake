@@ -22,11 +22,11 @@ jobs:
 
     - name: Test Dev Environment Connection
       env:
-        SF_USER_NAME_DEV: ${{ secrets.SF_USER_NAME_DEV }}
-        SF_WAREHOUSE_DEV: ${{ secrets.SF_WAREHOUSE_DEV }}
-        SF_ACCOUNT_DEV: ${{ secrets.SF_ACCOUNT_DEV }}
-        SF_SCHEMA_NAME_DEV: ${{ secrets.SF_SCHEMA_NAME_DEV }}
-        SF_PASSWORD_DEV: ${{ secrets.SF_PASSWORD_DEV }}
+        SF_USER_NAME_DEV: ${{ secrets.SF_USER_NAME }}
+        SF_WAREHOUSE_DEV: ${{ secrets.SF_WAREHOUSE}}
+        SF_ACCOUNT_DEV: ${{ secrets.SF_ACCOUNT }}
+        SF_SCHEMA_NAME_DEV: ${{ secrets.SF_SCHEMA_NAME }}
+        SF_PASSWORD_DEV: ${{ secrets.SF_PASSWORD}}
       run: |
         python - <<EOF
         import os
@@ -34,11 +34,11 @@ jobs:
 
         try:
             # Retrieve environment variables for Dev environment
-            user = os.getenv("SF_USER_NAME_DEV")
-            warehouse = os.getenv("SF_WAREHOUSE_DEV")
-            account = os.getenv("SF_ACCOUNT_DEV")
-            schema = os.getenv("SF_SCHEMA_NAME_DEV")
-            password = os.getenv("SF_PASSWORD_DEV")
+            user = os.getenv("SF_USER_NAME")
+            warehouse = os.getenv("SF_WAREHOUSE")
+            account = os.getenv("SF_ACCOUNT")
+            schema = os.getenv("SF_SCHEMA_NAME")
+            password = os.getenv("SF_PASSWORD")
 
             # Connect to Snowflake Dev environment
             conn = snowflake.connector.connect(
