@@ -1,1 +1,11 @@
+    create warehouse if not exists cicd_warehouse
+    with 
+    warehouse_size = 'MEDIUM'
+    auto_suspend = 300
+    auto_resume = TRUE
+    initially_suspended = TRUE
+    comment = 'This is the dedicated warehouse for CICD';
 
+create database sf_cicd_db;
+
+create schema sf_cicd_schema;
