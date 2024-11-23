@@ -9,3 +9,117 @@
 create database sf_cicd_db;
 
 create schema sf_cicd_schema;
+
+
+
+-- 1. Drugs Table
+CREATE TABLE sf_cicd_schema.drugs (
+    drug_id STRING NOT NULL PRIMARY KEY,
+    name STRING NOT NULL,
+    category STRING,
+    manufacturer STRING,
+    approval_date DATE,
+    status STRING
+);
+
+-- 2. Patients Table
+CREATE TABLE sf_cicd_schema.patients (
+    patient_id STRING NOT NULL PRIMARY KEY,
+    first_name STRING,
+    last_name STRING,
+    date_of_birth DATE,
+    gender STRING,
+    address STRING,
+    city STRING,
+    state STRING,
+    zip_code STRING,
+    contact_number STRING
+);
+
+-- 3. Prescriptions Table
+CREATE TABLE sf_cicd_schema.prescriptions (
+    prescription_id STRING NOT NULL PRIMARY KEY,
+    patient_id STRING NOT NULL REFERENCES sf_cicd_schema.patients(patient_id),
+    drug_id STRING NOT NULL REFERENCES sf_cicd_schema.drugs(drug_id),
+    prescribed_date DATE,
+    dosage STRING,
+    frequency STRING,
+    duration_days INT
+);
+
+-- 4. Clinical Trials Table
+CREATE TABLE sf_cicd_schema.clinical_trials (
+    trial_id STRING NOT NULL PRIMARY KEY,
+    drug_id STRING NOT NULL REFERENCES sf_cicd_schema.drugs(drug_id),
+    trial_name STRING,
+    phase STRING,
+    start_date DATE,
+    end_date DATE,
+    status STRING
+);
+
+-- 5. Adverse Events Table
+CREATE TABLE sf_cicd_schema.adverse_events (
+    event_id STRING NOT NULL PRIMARY KEY,
+    trial_id STRING REFERENCES sf_cicd_schema.clinical_trials(trial_id),
+    patient_id STRING REFERENCES sf_cicd_schema.patients(patient_id),
+    event_description STRING,
+    severity STRING,
+    event_date DATE
+);
+
+-- 6. Sales Table
+CREATE TABLE sf_cicd_schema.sales (
+    sale_id STRING NOT NULL PRIMARY KEY,
+    drug_id STRING NOT NULL REFERENCES sf_cicd_schema.drugs(drug_id),
+    sale_date DATE,
+    quantity_sold INT,
+    unit_price DECIMAL(10,2),
+    total_amount DECIMAL(10,2)
+);
+
+-- 7. Suppliers Table
+CREATE TABLE sf_cicd_schema.suppliers (
+    supplier_id STRING NOT NULL PRIMARY KEY,
+    name STRING,
+    contact_person STRING,
+    address STRING,
+    city STRING,
+    state STRING,
+    zip_code STRING,
+    phone STRING
+);
+
+-- 8. Inventory Table
+CREATE TABLE sf_cicd_schema.inventory (
+    inventory_id STRING NOT NULL PRIMARY KEY,
+    drug_id STRING NOT NULL REFERENCES sf_cicd_schema.drugs(drug_id),
+    supplier_id STRING REFERENCES sf_cicd_schema.suppliers(supplier_id),
+    batch_number STRING,
+    manufacture_date DATE,
+    expiry_date DATE,
+    quantity_available INT
+);
+
+-- 9. Doctors Table
+CREATE TABLE sf_cicd_schema.doctors (
+    doctor_id STRING NOT NULL PRIMARY KEY,
+    first_name STRING,
+    last_name STRING,
+    specialization STRING,
+    contact_number STRING,
+    clinic_address STRING,
+    city STRING,
+    state STRING,
+    zip_code STRING
+);
+
+-- 10. Appointments Table
+CREATE TABLE sf_cicd_schema.appointments (
+    appointment_id STRING NOT NULL PRIMARY KEY,
+    patient_id STRING NOT NULL REFERENCES sf_cicd_schema.patients(patient_id),
+    doctor_id STRING NOT NULL REFERENCES sf_cicd_schema.doctors(doctor_id),
+    appointment_date DATE,
+    reason_for_visit STRING,
+    prescription_id STRING REFERENCES sf_cicd_schema.prescriptions(prescription_id)
+);
