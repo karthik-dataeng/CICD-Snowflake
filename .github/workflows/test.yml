@@ -22,7 +22,7 @@ jobs:
 
     - name: Test Dev Environment Connection
       env:
-        SF_USER_NAME_DEV: ${{ secrets.DEV_USER_NAME }}
+        SF_USER_NAME_DEV: ${{ secrets.DEV_SF_USER_NAME }}
         SF_WAREHOUSE_DEV: ${{ secrets.DEV_SF_WAREHOUSE }}
         SF_ACCOUNT_DEV: ${{ secrets.DEV_SF_ACCOUNT}}
         SF_DATABASE_DEV: ${{ secrets.DEV_SF_DATABASE }}
