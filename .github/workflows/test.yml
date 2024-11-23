@@ -1,6 +1,7 @@
 name: Snowflake CI/CD Workflow
 
 on: workflow_dispatch
+
 jobs:
   snowflake-connection:
     runs-on: ubuntu-latest
@@ -19,25 +20,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install snowflake-connector-python
 
-    - name: Debug Environment Variables for Dev
-      env:
-        SF_USER_NAME_DEV: ${{ secrets.SF_USER_NAME_DEV }}
-        SF_WAREHOUSE_DEV: ${{ secrets.SF_WAREHOUSE_DEV }}
-        SF_ACCOUNT_DEV: ${{ secrets.SF_ACCOUNT_DEV }}
-        SF_SCHEMA_NAME_DEV: ${{ secrets.SF_SCHEMA_NAME_DEV }}
-        SF_PASSWORD_DEV: ${{ secrets.SF_PASSWORD_DEV }}
-      run: |
-        echo "SF_USER_NAME_DEV: $SF_USER_NAME_DEV"
-        echo "SF_WAREHOUSE_DEV: $SF_WAREHOUSE_DEV"
-        echo "SF_ACCOUNT_DEV: $SF_ACCOUNT_DEV"
-        echo "SF_SCHEMA_NAME_DEV: $SF_SCHEMA_NAME_DEV"
-        echo "SF_PASSWORD_DEV is set: [${{ secrets.SF_PASSWORD_DEV != '' }}]"
-
     - name: Test Dev Environment Connection
       env:
         SF_USER_NAME_DEV: ${{ secrets.SF_USER_NAME_DEV }}
         SF_WAREHOUSE_DEV: ${{ secrets.SF_WAREHOUSE_DEV }}
         SF_ACCOUNT_DEV: ${{ secrets.SF_ACCOUNT_DEV }}
+        SF_DATABASE_DEV: ${{ secrets.SF_DATABASE_DEV }}
         SF_SCHEMA_NAME_DEV: ${{ secrets.SF_SCHEMA_NAME_DEV }}
         SF_PASSWORD_DEV: ${{ secrets.SF_PASSWORD_DEV }}
       run: |
@@ -46,27 +34,22 @@ jobs:
         import snowflake.connector
 
         try:
-            # Retrieve environment variables for Dev environment
             user = os.getenv("SF_USER_NAME_DEV")
             warehouse = os.getenv("SF_WAREHOUSE_DEV")
             account = os.getenv("SF_ACCOUNT_DEV")
+            database = os.getenv("SF_DATABASE_DEV")
             schema = os.getenv("SF_SCHEMA_NAME_DEV")
             password = os.getenv("SF_PASSWORD_DEV")
 
-            if not all([user, warehouse, account, schema, password]):
-                raise ValueError("One or more environment variables are not set.")
-
-            # Connect to Snowflake Dev environment
             conn = snowflake.connector.connect(
                 user=user,
                 password=password,
                 account=account,
                 warehouse=warehouse,
-                database="your_database_name",  # Add the correct database name
+                database=database,
                 schema=schema
             )
 
-            # Test the connection
             cursor = conn.cursor()
             cursor.execute("SELECT CURRENT_VERSION()")
             version = cursor.fetchone()
@@ -78,6 +61,131 @@ jobs:
             print(f"Failed to connect to Snowflake Dev: {e}")
             raise e
         EOF
+
+    - name: Test SIT Environment Connection
+      env:
+        SF_USER_NAME_SIT: ${{ secrets.SF_USER_NAME_SIT }}
+        SF_WAREHOUSE_SIT: ${{ secrets.SF_WAREHOUSE_SIT }}
+        SF_ACCOUNT_SIT: ${{ secrets.SF_ACCOUNT_SIT }}
+        SF_DATABASE_SIT: ${{ secrets.SF_DATABASE_SIT }}
+        SF_SCHEMA_NAME_SIT: ${{ secrets.SF_SCHEMA_NAME_SIT }}
+        SF_PASSWORD_SIT: ${{ secrets.SF_PASSWORD_SIT }}
+      run: |
+        python - <<EOF
+        import os
+        import snowflake.connector
+
+        try:
+            user = os.getenv("SF_USER_NAME_SIT")
+            warehouse = os.getenv("SF_WAREHOUSE_SIT")
+            account = os.getenv("SF_ACCOUNT_SIT")
+            database = os.getenv("SF_DATABASE_SIT")
+            schema = os.getenv("SF_SCHEMA_NAME_SIT")
+            password = os.getenv("SF_PASSWORD_SIT")
+
+            conn = snowflake.connector.connect(
+                user=user,
+                password=password,
+                account=account,
+                warehouse=warehouse,
+                database=database,
+                schema=schema
+            )
+
+            cursor = conn.cursor()
+            cursor.execute("SELECT CURRENT_VERSION()")
+            version = cursor.fetchone()
+            print(f"Connected to Snowflake SIT. Version: {version[0]}")
+
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Failed to connect to Snowflake SIT: {e}")
+            raise e
+        EOF
+
+    - name: Retrieve DDLs from Dev Environment
+      env:
+        SF_USER_NAME_DEV: ${{ secrets.SF_USER_NAME_DEV }}
+        SF_WAREHOUSE_DEV: ${{ secrets.SF_WAREHOUSE_DEV }}
+        SF_ACCOUNT_DEV: ${{ secrets.SF_ACCOUNT_DEV }}
+        SF_DATABASE_DEV: ${{ secrets.SF_DATABASE_DEV }}
+        SF_SCHEMA_NAME_DEV: ${{ secrets.SF_SCHEMA_NAME_DEV }}
+        SF_PASSWORD_DEV: ${{ secrets.SF_PASSWORD_DEV }}
+      run: |
+        python - <<EOF
+        import os
+        import snowflake.connector
+
+        user = os.getenv("SF_USER_NAME_DEV")
+        warehouse = os.getenv("SF_WAREHOUSE_DEV")
+        account = os.getenv("SF_ACCOUNT_DEV")
+        database = os.getenv("SF_DATABASE_DEV")
+        schema = os.getenv("SF_SCHEMA_NAME_DEV")
+        password = os.getenv("SF_PASSWORD_DEV")
+
+        conn = snowflake.connector.connect(
+            user=user,
+            password=password,
+            account=account,
+            warehouse=warehouse,
+            database=database,
+            schema=schema
+        )
+
+        cursor = conn.cursor()
+        cursor.execute(f"SHOW TABLES IN SCHEMA {schema}")
+        tables = cursor.fetchall()
+
+        with open('dev_ddls.sql', 'w') as f:
+            for table in tables:
+                table_name = table[1]
+                cursor.execute(f"SHOW CREATE TABLE {database}.{schema}.{table_name}")
+                ddl = cursor.fetchone()[0]
+                f.write(ddl + "\n")
+                print(f"DDL for {table_name} retrieved and saved.")
+
+        cursor.close()
+        conn.close()
+        EOF
+
+    - name: Deploy DDLs to SIT Environment
+      env:
+        SF_USER_NAME_SIT: ${{ secrets.SF_USER_NAME_SIT }}
+        SF_WAREHOUSE_SIT: ${{ secrets.SF_WAREHOUSE_SIT }}
+        SF_ACCOUNT_SIT: ${{ secrets.SF_ACCOUNT_SIT }}
+        SF_DATABASE_SIT: ${{ secrets.SF_DATABASE_SIT }}
+        SF_SCHEMA_NAME_SIT: ${{ secrets.SF_SCHEMA_NAME_SIT }}
+        SF_PASSWORD_SIT: ${{ secrets.SF_PASSWORD_SIT }}
+      run: |
+        python - <<EOF
+        import os
+        import snowflake.connector
+
+        user = os.getenv("SF_USER_NAME_SIT")
+        warehouse = os.getenv("SF_WAREHOUSE_SIT")
+        account = os.getenv("SF_ACCOUNT_SIT")
+        database = os.getenv("SF_DATABASE_SIT")
+        schema = os.getenv("SF_SCHEMA_NAME_SIT")
+        password = os.getenv("SF_PASSWORD_SIT")
+
+        conn = snowflake.connector.connect(
+            user=user,
+            password=password,
+            account=account,
+            warehouse=warehouse,
+            database=database,
+            schema=schema
+        )
+
+        with open('dev_ddls.sql', 'r') as f:
+            ddl_commands = f.read()
+
+        cursor = conn.cursor()
+        for command in ddl_commands.split(";"):
+            if command.strip():
+                cursor.execute(command)
+        print("DDLs deployed to SIT successfully.")
 
         cursor.close()
         conn.close()
