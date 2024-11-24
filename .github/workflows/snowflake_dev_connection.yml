@@ -42,6 +42,15 @@ jobs:
                 schema=os.getenv("SNOWFLAKE_SCHEMA")
             )
             print("Connection successful!")
+
+            #list all the tables present in the schema
+            cursor = conn.cursor()
+            cursor.execute("SHOW TABLES")
+            tables = cursor.fetchall()
+            print("Tables in the schema: ")
+            for table in tables:
+              print(f"- {table[1]}") 
+              
         except Exception as e:
             print(f"Connection failed: {e}")
         finally:
