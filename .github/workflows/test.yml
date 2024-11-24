@@ -35,7 +35,7 @@ jobs:
 
         try:
             user = os.getenv("DEV_SF_USER_NAME")
-            warehouse = os.getenv("DEV_WAREHOUSE")
+            warehouse = os.getenv("DEV_SF_WAREHOUSE")
             account = os.getenv("DEV_SF_ACCOUNT")
             database = os.getenv("DEV_SF_DATABASE")
             schema = os.getenv("DEV_SF_SCHEMA_NAME")
