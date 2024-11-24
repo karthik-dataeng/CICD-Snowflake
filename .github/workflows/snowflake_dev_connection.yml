@@ -107,13 +107,15 @@ jobs:
             )
             print("Connection successful to SIT Snowflake environment!")
 
-            # Assuming you have a file with DDLs to be applied to the SIT environment
+            # Read and execute each DDL from the uploaded artifact
             with open('schema_ddls.sql', 'r') as ddl_file:
-                ddl_script = ddl_file.read()
-                # Execute DDLs in SIT environment
+                ddl_statements = ddl_file.read().split(';')  # Split statements by semicolon
                 cursor = conn.cursor()
-                cursor.execute(ddl_script)
-                print("DDL script applied successfully!")
+                for statement in ddl_statements:
+                    if statement.strip():  # Only execute non-empty statements
+                        print(f"Executing DDL: {statement.strip()}")
+                        cursor.execute(statement.strip())
+            print("All DDLs applied successfully to the SIT environment!")
 
         except Exception as e:
             print(f"Error occurred in SIT connection: {e}")
