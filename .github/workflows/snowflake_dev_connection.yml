@@ -29,7 +29,9 @@ jobs:
       run: |
         python - <<EOF
         import snowflake.connector
-        
+        import os
+
+        conn = None
         try:
             conn = snowflake.connector.connect(
                 account=os.getenv("SNOWFLAKE_ACCOUNT"),
@@ -43,8 +45,10 @@ jobs:
         except Exception as e:
             print(f"Connection failed: {e}")
         finally:
-            conn.close()
+            if conn:
+                conn.close()
         EOF
+
 
     - name: Print Bye Bye Message
       run: echo "Bye Bye! Snowflake connection test complete."
