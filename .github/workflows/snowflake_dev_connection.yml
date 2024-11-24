@@ -28,52 +28,51 @@ jobs:
         SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
       run: |
         python - <<EOF
-        import snowflake.connector
-        import os
+import snowflake.connector
+import os
 
-        conn = None
-        try:
-            conn = snowflake.connector.connect(
-                account=os.getenv("SNOWFLAKE_ACCOUNT"),
-                user=os.getenv("SNOWFLAKE_USER"),
-                password=os.getenv("SNOWFLAKE_PASSWORD"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                database=os.getenv("SNOWFLAKE_DATABASE"),
-                schema=os.getenv("SNOWFLAKE_SCHEMA")
-            )
-            print("Connection successful!")
+conn = None
+try:
+    conn = snowflake.connector.connect(
+        account=os.getenv("SNOWFLAKE_ACCOUNT"),
+        user=os.getenv("SNOWFLAKE_USER"),
+        password=os.getenv("SNOWFLAKE_PASSWORD"),
+        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+        database=os.getenv("SNOWFLAKE_DATABASE"),
+        schema=os.getenv("SNOWFLAKE_SCHEMA")
+    )
+    print("Connection successful!")
 
-            #list all the tables present in the schema
-            cursor = conn.cursor()
-            cursor.execute("SHOW TABLES")
-            tables = cursor.fetchall()
-            print("Tables in the schema: ")
-            for table in tables:
-              print(f"- {table[1]}") 
+    # List all the tables present in the schema
+    cursor = conn.cursor()
+    cursor.execute("SHOW TABLES")
+    tables = cursor.fetchall()
+    print("Tables in the schema: ")
+    for table in tables:
+        print(f"- {table[1]}") 
 
-            with open("schema_ddls.sql", "w") as ddl_file:
-                for table in tables:
-                    table_name = table[1]  # Adjust index based on SHOW TABLES output structure
-                    print(f"Fetching DDL for table: {table_name}")
+    with open("schema_ddls.sql", "w") as ddl_file:
+        for table in tables:
+            table_name = table[1]  # Adjust index based on SHOW TABLES output structure
+            print(f"Fetching DDL for table: {table_name}")
 
-                    # Get the DDL for the table
-                    cursor.execute(f"SELECT GET_DDL('TABLE', '{table_name}')")
-                    ddl_result = cursor.fetchone()
-                    
-                    if ddl_result:
-                        ddl = ddl_result[0]  # The DDL is in the first column
-                        ddl_file.write(f"-- DDL for table: {table_name}\n")
-                        ddl_file.write(ddl + ";\n\n")
+            # Get the DDL for the table
+            cursor.execute(f"SELECT GET_DDL('TABLE', '{table_name}')")
+            ddl_result = cursor.fetchone()
+            
+            if ddl_result:
+                ddl = ddl_result[0]  # The DDL is in the first column
+                ddl_file.write(f"-- DDL for table: {table_name}\n")
+                ddl_file.write(ddl + ";\n\n")
 
-            print("All DDLs have been saved to schema_ddls.sql")
-              
-        except Exception as e:
-            print(f"Connection failed: {e}")
-        finally:
-            if conn:
-                conn.close()
-        EOF
+    print("All DDLs have been saved to schema_ddls.sql")
 
+except Exception as e:
+    print(f"Connection failed: {e}")
+finally:
+    if conn:
+        conn.close()
+EOF
 
     - name: Test Connectivity for SIT Snowflake Environment
       env:
@@ -85,28 +84,28 @@ jobs:
         SIT_SNOWFLAKE_SCHEMA: ${{ secrets.SIT_SNOWFLAKE_SCHEMA}}
       run: |
         python - <<EOF
-        import snowflake.connector
-        import os
+import snowflake.connector
+import os
 
-        conn = None
-        try:
-            # Connect to SIT Snowflake Environment
-            conn = snowflake.connector.connect(
-                account=os.getenv("SIT_SNOWFLAKE_ACCOUNT"),
-                user=os.getenv("SIT_SNOWFLAKE_USER"),
-                password=os.getenv("SIT_SNOWFLAKE_PASSWORD"),
-                warehouse=os.getenv("SIT_SNOWFLAKE_WAREHOUSE"),
-                database=os.getenv("SIT_SNOWFLAKE_DATABASE"),
-                schema=os.getenv("SIT_SNOWFLAKE_SCHEMA")
-            )
-            print("Connection successful to SIT Snowflake environment!")
-            
-        except Exception as e:
-            print(f"Error occurred in SIT connection: {e}")
-        finally:
-            if conn:
-                conn.close()
-        EOF
+conn = None
+try:
+    # Connect to SIT Snowflake Environment
+    conn = snowflake.connector.connect(
+        account=os.getenv("SIT_SNOWFLAKE_ACCOUNT"),
+        user=os.getenv("SIT_SNOWFLAKE_USER"),
+        password=os.getenv("SIT_SNOWFLAKE_PASSWORD"),
+        warehouse=os.getenv("SIT_SNOWFLAKE_WAREHOUSE"),
+        database=os.getenv("SIT_SNOWFLAKE_DATABASE"),
+        schema=os.getenv("SIT_SNOWFLAKE_SCHEMA")
+    )
+    print("Connection successful to SIT Snowflake environment!")
+
+except Exception as e:
+    print(f"Error occurred in SIT connection: {e}")
+finally:
+    if conn:
+        conn.close()
+EOF
 
     - name: Print Bye Bye Message
       run: echo "Bye Bye! Snowflake connection test complete."
