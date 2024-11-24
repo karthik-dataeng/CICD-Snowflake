@@ -27,7 +27,6 @@ jobs:
         SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
         SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
       run: |
-        python - <<EOF
         import snowflake.connector
         import os
 
@@ -43,13 +42,13 @@ jobs:
             )
             print("Connection successful!")
 
-            #list all the tables present in the schema
+            # List all tables in the schema
             cursor = conn.cursor()
             cursor.execute("SHOW TABLES")
             tables = cursor.fetchall()
             print("Tables in the schema: ")
             for table in tables:
-              print(f"- {table[1]}") 
+              print(f"- {table[1]}")
 
             # Open file to save DDLs for the current connection
             with open("schema_ddls.sql", "w") as ddl_file:
@@ -60,20 +59,25 @@ jobs:
                     # Get the DDL for the table
                     cursor.execute(f"SELECT GET_DDL('TABLE', '{table_name}')")
                     ddl_result = cursor.fetchone()
-                    
+
                     if ddl_result:
                         ddl = ddl_result[0]  # The DDL is in the first column
                         ddl_file.write(f"-- DDL for table: {table_name}\n")
                         ddl_file.write(ddl + ";\n\n")
 
-            print("All DDLs for current Snowflake connection have been saved to schema_ddls.sql")
-              
+            print("All DDLs have been saved to schema_ddls.sql")
+        
         except Exception as e:
             print(f"Connection failed: {e}")
         finally:
             if conn:
                 conn.close()
-        EOF
+
+    - name: Upload DDLs as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: snowflake-ddls
+        path: schema_ddls.sql
 
     - name: Test Connectivity for SIT Snowflake Environment
       env:
@@ -84,7 +88,6 @@ jobs:
         SIT_SNOWFLAKE_DATABASE: ${{ secrets.SIT_SNOWFLAKE_DATABASE }}
         SIT_SNOWFLAKE_SCHEMA: ${{ secrets.SIT_SNOWFLAKE_SCHEMA }}
       run: |
-        python - <<EOF
         import snowflake.connector
         import os
 
@@ -101,12 +104,27 @@ jobs:
             )
             print("Connection successful to SIT Snowflake environment!")
 
+            # Download the DDL artifact
+            from github import Github
+            g = Github(os.getenv('GITHUB_TOKEN'))  # GitHub token to authenticate
+            repo = g.get_repo(os.getenv('GITHUB_REPOSITORY'))
+            artifact = repo.get_artifacts()[0]  # Assuming the first artifact is the DDLs
+            artifact.download('schema_ddls.sql')
+
+            # Read DDLs from the downloaded file and execute in SIT Snowflake environment
+            with open('schema_ddls.sql', 'r') as ddl_file:
+                ddl_queries = ddl_file.read().splitlines()
+                cursor = conn.cursor()
+                for query in ddl_queries:
+                    if query.strip():
+                        print(f"Executing DDL: {query}")
+                        cursor.execute(query)
+
         except Exception as e:
             print(f"Error occurred in SIT connection: {e}")
         finally:
             if conn:
                 conn.close()
-        EOF
 
     - name: Print Bye Bye Message
       run: echo "Bye Bye! Snowflake connection test complete."
