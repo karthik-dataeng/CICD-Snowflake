@@ -35,12 +35,12 @@ jobs:
         import snowflake.connector
 
         try:
-            user = os.getenv("Karthik")
-            warehouse = os.getenv("CICD_WAREHOUSE")
-            account = os.getenv("gw90959.ap-southeast-1")
-            database = os.getenv("SF_CICD_DB")
-            schema = os.getenv("SF_CICD_SCHEMA")
-            password = os.getenv("9962842544Kar#")
+            user = os.getenv("SF_USER_NAME_DEV")
+            warehouse = os.getenv("SF_WAREHOUSE_DEV")
+            account = os.getenv("SF_ACCOUNT_DEV")
+            database = os.getenv("SF_DATABASE_DEV")
+            schema = os.getenv("SF_SCHEMA_NAME_DEV")
+            password = os.getenv("SF_PASSWORD_DEV")
 
             conn = snowflake.connector.connect(
                 user=user,
@@ -55,10 +55,12 @@ jobs:
             cursor.execute("SELECT CURRENT_VERSION()")
             version = cursor.fetchone()
             print(f"Connected to Snowflake Dev. Version: {version[0]}")
+            print(f"Account: {account}, User: {user}, Warehouse: {warehouse}, Database: {database}, Schema: {schema}")
 
             cursor.close()
             conn.close()
         except Exception as e:
+            print(f"Account: {account}, User: {user}, Warehouse: {warehouse}, Database: {database}, Schema: {schema}")
             print(f"Failed to connect to Snowflake Dev: {e}")
             raise e
         EOF
