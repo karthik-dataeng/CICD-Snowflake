@@ -100,6 +100,13 @@ jobs:
                 schema=os.getenv("SIT_SNOWFLAKE_SCHEMA")
             )
             print("Connection successful to SIT Snowflake environment!")
+            
+        except Exception as e:
+            print(f"Error occurred in SIT connection: {e}")
+        finally:
+            if conn:
+                conn.close()
+        EOF
 
     - name: Print Bye Bye Message
       run: echo "Bye Bye! Snowflake connection test complete."
