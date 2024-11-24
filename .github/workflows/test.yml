@@ -35,12 +35,12 @@ jobs:
         import snowflake.connector
 
         try:
-            user = os.getenv("DEV_SF_USER_NAME")
-            warehouse = os.getenv("DEV_SF_WAREHOUSE")
-            account = os.getenv("DEV_SF_ACCOUNT")
-            database = os.getenv("DEV_SF_DATABASE")
-            schema = os.getenv("DEV_SF_SCHEMA_NAME")
-            password = os.getenv("DEV_SF_PASSWORD")
+            user = os.getenv("Karthik")
+            warehouse = os.getenv("CICD_WAREHOUSE")
+            account = os.getenv("gw90959.ap-southeast-1")
+            database = os.getenv("SF_CICD_DB")
+            schema = os.getenv("SF_CICD_SCHEMA")
+            password = os.getenv("9962842544Kar#")
 
             conn = snowflake.connector.connect(
                 user=user,
