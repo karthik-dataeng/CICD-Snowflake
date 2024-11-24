@@ -124,5 +124,5 @@ jobs:
                 conn.close()
         EOF
 
-    - name: Print Bye Bye Message
-      run: echo "Bye Bye! Snowflake connection test complete."
+    - name: Task Complished
+      run: echo "Tables have been migrated"
