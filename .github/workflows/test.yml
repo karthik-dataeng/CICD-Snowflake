@@ -19,6 +19,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install snowflake-connector-python
+        pip install --upgrade snowflake-connector-python
 
     - name: Test Dev Environment Connection
       env:
