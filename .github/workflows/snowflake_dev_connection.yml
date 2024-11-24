@@ -58,6 +58,38 @@ jobs:
                 conn.close()
         EOF
 
+    - name: Test Connectivity for SIT Snowflake Environment
+      env:
+        SIT_SNOWFLAKE_ACCOUNT: ${{ secrets.SIT_SNOWFLAKE_ACCOUNT }}
+        SIT_SNOWFLAKE_USER: ${{ secrets.SIT_SNOWFLAKE_USER }}
+        SIT_SNOWFLAKE_PASSWORD: ${{ secrets.SIT_SNOWFLAKE_PASSWORD }}
+        SIT_SNOWFLAKE_WAREHOUSE: ${{ secrets.SIT_SNOWFLAKE_WAREHOUSE }}
+        SIT_SNOWFLAKE_DATABASE: ${{ secrets.SIT_SNOWFLAKE_DATABASE }}
+        SIT_SNOWFLAKE_SCHEMA: ${{ secrets.SIT_SNOWFLAKE_SCHEMA }}
+      run: |
+        python - <<EOF
+        import snowflake.connector
+        import os
+
+        conn = None
+        try:
+            # Connect to SIT Snowflake Environment
+            conn = snowflake.connector.connect(
+                account=os.getenv("SIT_SNOWFLAKE_ACCOUNT"),
+                user=os.getenv("SIT_SNOWFLAKE_USER"),
+                password=os.getenv("SIT_SNOWFLAKE_PASSWORD"),
+                warehouse=os.getenv("SIT_SNOWFLAKE_WAREHOUSE"),
+                database=os.getenv("SIT_SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SIT_SNOWFLAKE_SCHEMA")
+            )
+            print("Connection successful to SIT Snowflake environment!")
+
+        except Exception as e:
+            print(f"Error occurred in SIT connection: {e}")
+        finally:
+            if conn:
+                conn.close()
+        EOF
 
     - name: Print Bye Bye Message
       run: echo "Bye Bye! Snowflake connection test complete."
