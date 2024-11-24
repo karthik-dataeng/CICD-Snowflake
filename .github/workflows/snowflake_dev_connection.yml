@@ -1,4 +1,4 @@
-name: Test Snowflake Connection
+name: Snowflake Definition Migration Dev to SIT
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install snowflake-connector-python
 
-    - name: Test Snowflake Connection
+    - name: Test Connectivity for DEV Snowflake Environment
       env:
         SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
         SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
@@ -55,7 +55,7 @@ jobs:
             with open("schema_ddls.sql", "w") as ddl_file:
                 for table in tables:
                     table_name = table[1]  # Adjust index based on SHOW TABLES output structure
-                    print(f"Fetching DDL for table: {table_name}")
+                    #print(f"Fetching DDL for table: {table_name}")
 
                     # Get the DDL for the table
                     cursor.execute(f"SELECT GET_DDL('TABLE', '{table_name}')")
@@ -113,7 +113,7 @@ jobs:
                 cursor = conn.cursor()
                 for statement in ddl_statements:
                     if statement.strip():  # Only execute non-empty statements
-                        print(f"Executing DDL: {statement.strip()}")
+                        #print(f"Executing DDL: {statement.strip()}")
                         cursor.execute(statement.strip())
             print("All DDLs applied successfully to the SIT environment!")
 
